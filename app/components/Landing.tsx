@@ -834,11 +834,11 @@ export function Landing() {
       <section className="cost-anchor">
         <div className="container">
           <p>
-            Rough math: a Shopify store doing <strong>$50K/month</strong> in B2B
-            can quietly leak <strong>15-30% of that margin</strong> to retail
-            shoppers when a single configuration breaks. That&rsquo;s{" "}
-            <strong>$7,500 to $15,000 per month</strong>, often unnoticed until
-            quarter-end.
+            Rough math: when a single configuration breaks,{" "}
+            <strong>15 to 30 percent</strong> of your B2B margin can quietly
+            reach retail shoppers, often unnoticed until quarter-end. On a store
+            doing <strong>$50K a month</strong> in B2B, that&rsquo;s{" "}
+            <strong>$7,500 to $15,000</strong> gone before anyone looks.
           </p>
         </div>
       </section>
