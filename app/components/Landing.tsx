@@ -47,6 +47,11 @@ const body = Inter({
 const INSTALL_URL =
   process.env.NEXT_PUBLIC_INSTALL_URL ?? "https://apps.shopify.com/b2b-guardrail";
 
+// Bloque "See it in your store": pendiente de capturas reales del dashboard
+// (Romina las inyecta después). Gated en false para NO publicar placeholders en
+// producción. TODO(Romina): poner en true cuando existan las imágenes reales.
+const SHOW_SCREENSHOTS = false;
+
 // Colores de severidad: mismos cortes semánticos que la app. Punto + chip con
 // tinte suave. Sustituyen a los emoji del mockup anterior.
 const SEVERITY = {
@@ -169,6 +174,14 @@ const FAQS = [
     q: "Can I trust your alerts?",
     a: "We use Shopify's official Admin API and check three independent leak vectors (catalogs, discount codes, automatic discounts). Findings are deduplicated and tracked persistently.",
   },
+  // Claim verificado contra el código (no ablandar sin re-auditar primero):
+  //  - "deleted immediately on uninstall": el webhook app/uninstalled
+  //    (app/api/webhooks/app-uninstalled) borra el Shop con cascada a
+  //    Audit/Finding/Alert; el accessToken vive en Shop y cae con él.
+  //  - "final compliance check 48 hours later": el webhook shop/redact
+  //    (app/api/webhooks/shop/redact), que Shopify dispara ~48h tras
+  //    desinstalar; re-borra de forma idempotente y registra ComplianceRequest.
+  //  - "GDPR": los 3 webhooks de compliance están suscritos en shopify.app.toml.
   {
     q: "What if I uninstall?",
     a: "All your data is deleted immediately on uninstall, with a final compliance check 48 hours later. We follow GDPR requirements for data handling.",
@@ -592,12 +605,13 @@ export function Landing() {
         .lp .positioning {
           text-align: center; padding: 5rem 0;
           border-top: 1px solid var(--border);
+          border-bottom: 1px solid var(--border);
         }
         .lp .positioning p {
-          max-width: 640px; margin: 0 auto; color: var(--muted);
+          max-width: 720px; margin: 0 auto; color: var(--muted);
           font-size: 17px; line-height: 1.6;
         }
-        .lp .positioning strong { color: var(--ink); font-weight: 600; }
+        .lp .positioning strong { color: var(--ink); font-weight: 500; }
 
         /* Final CTA */
         .lp .final-cta { background: var(--brand); color: #fff; text-align: center; }
@@ -626,9 +640,37 @@ export function Landing() {
         .lp .footer-links a:hover { color: var(--brand); }
         .lp .copyright { font-size: 14px; color: var(--muted); }
 
+        /* Sub-hero: ancla de coste concreto (estimación, sobria, sin card). */
+        .lp .cost-anchor { padding: 4rem 0 0; text-align: center; }
+        .lp .cost-anchor p {
+          max-width: 720px; margin: 0 auto; font-size: 20px; line-height: 1.5;
+          color: var(--muted);
+        }
+        .lp .cost-anchor strong { color: var(--ink); font-weight: 500; }
+
+        /* Tagline de categoría bajo el wordmark (ayuda de escaneo, solo desktop). */
+        .lp .brand-text { display: inline-flex; flex-direction: column; line-height: 1.15; }
+        .lp .brand-tagline {
+          font-size: 11px; font-weight: 400; color: var(--muted); letter-spacing: 0;
+        }
+
+        /* "See it in your store": placeholders hasta tener capturas reales. */
+        .lp .shots-grid {
+          display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+        }
+        .lp .shot-ph {
+          background: var(--brand-light); border: 1px solid var(--border);
+          border-radius: 16px; aspect-ratio: 4 / 3; padding: 1.5rem;
+          display: flex; flex-direction: column; align-items: center;
+          justify-content: center; gap: 0.75rem; text-align: center;
+          color: var(--brand);
+        }
+        .lp .shot-ph .shot-label { font-size: 14px; font-weight: 500; color: var(--ink); }
+        .lp .shot-ph .shot-sub { font-size: 13px; color: var(--muted); }
+
         /* ---------- Responsive ---------- */
         @media (max-width: 900px) {
-          .lp .grid-3, .lp .steps, .lp .plans { grid-template-columns: 1fr; }
+          .lp .grid-3, .lp .steps, .lp .plans, .lp .shots-grid { grid-template-columns: 1fr; }
           .lp .steps { gap: 2rem; }
           .lp .hero-grid { grid-template-columns: 1fr; gap: 2.5rem; text-align: center; }
           /* Mobile: el ring del score va arriba, H1 y subheadline debajo. */
@@ -640,6 +682,8 @@ export function Landing() {
         }
         @media (max-width: 640px) {
           .lp { font-size: 16px; }
+          /* La tagline de categoría se oculta en móvil para no apretar el topbar. */
+          .lp .brand-tagline { display: none; }
           .lp .container { padding: 0 1.5rem; }
           .lp section { padding: 4rem 0; }
           .lp .hero { padding: 3rem 0 4rem; }
@@ -669,7 +713,10 @@ export function Landing() {
                 tamaño). <img> evita el optimizador de next/image. */}
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/b2b-guardrail-icon.svg" alt="B2B Guardrail" width={30} height={30} />
-            <span className="wordmark">B2B Guardrail</span>
+            <span className="brand-text">
+              <span className="wordmark">B2B Guardrail</span>
+              <span className="brand-tagline">Pricing observability for Shopify B2B</span>
+            </span>
           </span>
           <a className="btn btn-primary" href={INSTALL_URL}>
             Install on Shopify
@@ -697,7 +744,7 @@ export function Landing() {
                   Install on Shopify
                 </a>
                 <a className="btn btn-secondary" href={INSTALL_URL}>
-                  Run a free audit
+                  Try the free plan
                 </a>
               </div>
               <p className="subnote">Free plan available. No credit card required.</p>
@@ -782,6 +829,20 @@ export function Landing() {
         </div>
       </section>
 
+      {/* Sub-hero: ancla de coste. Estimación marcada como tal ("Rough math"):
+          da urgencia con una cifra concreta en vez de solo adjetivos. */}
+      <section className="cost-anchor">
+        <div className="container">
+          <p>
+            Rough math: a Shopify store doing <strong>$50K/month</strong> in B2B
+            can quietly leak <strong>15-30% of that margin</strong> to retail
+            shoppers when a single configuration breaks. That&rsquo;s{" "}
+            <strong>$7,500 to $15,000 per month</strong>, often unnoticed until
+            quarter-end.
+          </p>
+        </div>
+      </section>
+
       {/* 3. Problem — momentos reconocibles */}
       <section>
         <div className="container">
@@ -829,7 +890,7 @@ export function Landing() {
               see what&rsquo;s already exposed.
             </p>
             <a className="btn btn-secondary" href={INSTALL_URL}>
-              Run a free audit
+              Try the free plan
             </a>
           </div>
         </div>
@@ -913,6 +974,32 @@ export function Landing() {
           </div>
         </div>
       </section>
+
+      {/* "See it in your store": placeholders gated (SHOW_SCREENSHOTS=false).
+          NO se publican en producción hasta tener las capturas reales. */}
+      {SHOW_SCREENSHOTS && (
+        <section>
+          <div className="container">
+            <div className="section-head">
+              <p className="eyebrow">See it in your store</p>
+              <h2>Inside the dashboard.</h2>
+            </div>
+            <div className="shots-grid">
+              {[
+                "Dashboard with findings",
+                "Finding detail with Open in Shopify admin",
+                "Score history",
+              ].map((label) => (
+                <div className="shot-ph" key={label}>
+                  <ScanSearch size={28} strokeWidth={1.5} />
+                  <span className="shot-label">{label}</span>
+                  <span className="shot-sub">Screenshot pending</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 7. Pricing */}
       <section>

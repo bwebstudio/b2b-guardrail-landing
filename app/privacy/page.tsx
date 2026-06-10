@@ -12,7 +12,7 @@ import { BRAND } from "@/lib/brand";
 const inter = Inter({ subsets: ["latin"], weight: ["400", "500"] });
 
 export const metadata: Metadata = {
-  title: "Privacy Policy — B2B Guardrail",
+  title: "B2B Guardrail Privacy Policy",
   description:
     "How B2B Guardrail collects, uses, and protects data for Shopify merchants.",
 };
@@ -135,7 +135,7 @@ export default function PrivacyPolicyPage() {
         </li>
         <li>
           <strong>Findings</strong>: details about your store&rsquo;s B2B and
-          wholesale pricing configuration — affected product IDs, the type and
+          wholesale pricing configuration: affected product IDs, the type and
           severity of each issue (e.g. price leaks or rule conflicts), and our
           recommendations. These describe <em>your store&rsquo;s
           configuration</em>, not your customers.
@@ -197,18 +197,18 @@ export default function PrivacyPolicyPage() {
       </p>
       <ul>
         <li>
-          <strong>Shopify Inc.</strong> — the platform that authenticates the
+          <strong>Shopify Inc.</strong>: the platform that authenticates the
           app (OAuth), provides store data via its API, and processes billing.
         </li>
         <li>
-          <strong>Supabase</strong> — managed PostgreSQL database hosting, in the
+          <strong>Supabase</strong>: managed PostgreSQL database hosting, in the
           European Union region.
         </li>
         <li>
-          <strong>Vercel</strong> — application hosting and serverless execution.
+          <strong>Vercel</strong>: application hosting and serverless execution.
         </li>
         <li>
-          <strong>Slack</strong> — only if you configure a Slack webhook, used to
+          <strong>Slack</strong>: only if you configure a Slack webhook, used to
           deliver the alerts you opt into.
         </li>
       </ul>
