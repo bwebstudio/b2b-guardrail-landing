@@ -1,0 +1,18 @@
+/* Reset mínimo para la landing pública. La landing y la página de privacidad
+   traen sus propios estilos encapsulados (scope `.lp` y `.pp`). */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  -webkit-font-smoothing: antialiased;
+}
