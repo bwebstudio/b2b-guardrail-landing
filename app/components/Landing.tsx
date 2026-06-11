@@ -11,6 +11,7 @@ import {
   ScanSearch,
   Zap,
 } from "lucide-react";
+import Image from "next/image";
 import { BRAND } from "@/lib/brand";
 
 // La landing vive FUERA del admin embebido de Shopify: es pública, sin auth y
@@ -47,10 +48,43 @@ const body = Inter({
 const INSTALL_URL =
   process.env.NEXT_PUBLIC_INSTALL_URL ?? "https://apps.shopify.com/b2b-guardrail";
 
-// Bloque "See it in your store": pendiente de capturas reales del dashboard
-// (Romina las inyecta después). Gated en false para NO publicar placeholders en
-// producción. TODO(Romina): poner en true cuando existan las imágenes reales.
-const SHOW_SCREENSHOTS = false;
+// Bloque "See it in your store": capturas reales del dashboard. Los assets viven
+// en landing/public/screenshots y se sirven por URL (convención Next para
+// estáticos); next/image los optimiza usando las dimensiones intrínsecas que
+// pasamos abajo, lo que preserva el aspect ratio de cada captura.
+const SHOW_SCREENSHOTS = true;
+
+// width/height = dimensiones reales del PNG (preservan proporción; next/image
+// reescala con `sizes`). El copy es fiel a lo que hace la app, sin claims nuevos.
+const SCREENSHOTS = [
+  {
+    src: "/screenshots/b2b_guardrail_price_list_public_clean_final.png",
+    width: 2658,
+    height: 1555,
+    title: "Catch leaks the moment they appear",
+    caption:
+      "Each finding shows what’s wrong, what it affects, and a direct link to fix it in your Shopify admin.",
+    alt: "B2B Guardrail dashboard showing a critical finding: a wholesale price list exposed in a public catalog, with the recommended fix and a direct link to the Shopify admin.",
+  },
+  {
+    src: "/screenshots/b2b_guardrail_score_history_improving_final.png",
+    width: 1900,
+    height: 487,
+    title: "Track your protection score over time",
+    caption:
+      "Run audits manually or let them run automatically. Your protection score climbs as you close leaks.",
+    alt: "Protection score history chart showing scores improving from 45 to 97 across recent audits.",
+  },
+  {
+    src: "/screenshots/b2b_guardrail_protected_state_clean_from_capture.png",
+    width: 1935,
+    height: 1720,
+    title: "Reach a protected state, and stay there",
+    caption:
+      "Once your store is clean, we keep watching. New leaks are caught and surfaced right away.",
+    alt: "B2B Guardrail dashboard showing the store in a Protected state with no open critical issues.",
+  },
+];
 
 // Colores de severidad: mismos cortes semánticos que la app. Punto + chip con
 // tinte suave. Sustituyen a los emoji del mockup anterior.
@@ -654,19 +688,37 @@ export function Landing() {
           font-size: 11px; font-weight: 400; color: var(--muted); letter-spacing: 0;
         }
 
-        /* "See it in your store": placeholders hasta tener capturas reales. */
+        /* "See it in your store": cards con capturas reales del dashboard.
+           Cada imagen conserva su aspect ratio (sin recorte); las cards se
+           alinean arriba porque las capturas tienen alturas distintas. */
         .lp .shots-grid {
           display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem;
+          align-items: start;
         }
-        .lp .shot-ph {
-          background: var(--brand-light); border: 1px solid var(--border);
-          border-radius: 16px; aspect-ratio: 4 / 3; padding: 1.5rem;
-          display: flex; flex-direction: column; align-items: center;
-          justify-content: center; gap: 0.75rem; text-align: center;
-          color: var(--brand);
+        .lp .shot-card {
+          margin: 0; background: var(--surface); border: 1px solid var(--border);
+          border-radius: 16px; padding: 1rem;
+          box-shadow: 0 10px 30px -22px rgba(26, 21, 35, 0.25);
         }
-        .lp .shot-ph .shot-label { font-size: 14px; font-weight: 500; color: var(--ink); }
-        .lp .shot-ph .shot-sub { font-size: 13px; color: var(--muted); }
+        .lp .shot-img {
+          display: block; width: 100%; height: auto;
+          border-radius: 10px; border: 1px solid var(--border); background: #fff;
+        }
+        /* Desktop: alto fijo + contain para que las 3 cards queden uniformes pese
+           a los aspect ratios distintos, sin recortar nada (las franjas blancas
+           del contain casan con el fondo de la imagen). En mobile, apiladas, las
+           imágenes van a su tamaño natural. */
+        @media (min-width: 901px) {
+          .lp .shot-img { height: 200px; object-fit: contain; }
+        }
+        .lp .shot-card figcaption { padding: 1rem 0.5rem 0.5rem; }
+        .lp .shot-title {
+          font-size: 17px; font-weight: 600; margin: 0 0 0.35rem;
+          line-height: 1.3; letter-spacing: -0.01em;
+        }
+        .lp .shot-caption {
+          font-size: 14.5px; color: var(--muted); line-height: 1.55; margin: 0;
+        }
 
         /* ---------- Responsive ---------- */
         @media (max-width: 900px) {
@@ -975,26 +1027,31 @@ export function Landing() {
         </div>
       </section>
 
-      {/* "See it in your store": placeholders gated (SHOW_SCREENSHOTS=false).
-          NO se publican en producción hasta tener las capturas reales. */}
+      {/* "See it in your store": capturas reales del dashboard (gated por
+          SHOW_SCREENSHOTS). Eyebrow y H2 en el estilo del resto de la landing. */}
       {SHOW_SCREENSHOTS && (
         <section>
           <div className="container">
             <div className="section-head">
-              <p className="eyebrow">See it in your store</p>
-              <h2>Inside the dashboard.</h2>
+              <p className="eyebrow">Inside the dashboard</p>
+              <h2>See it in your store.</h2>
             </div>
             <div className="shots-grid">
-              {[
-                "Dashboard with findings",
-                "Finding detail with Open in Shopify admin",
-                "Score history",
-              ].map((label) => (
-                <div className="shot-ph" key={label}>
-                  <ScanSearch size={28} strokeWidth={1.5} />
-                  <span className="shot-label">{label}</span>
-                  <span className="shot-sub">Screenshot pending</span>
-                </div>
+              {SCREENSHOTS.map((s) => (
+                <figure className="shot-card" key={s.src}>
+                  <Image
+                    src={s.src}
+                    alt={s.alt}
+                    width={s.width}
+                    height={s.height}
+                    sizes="(max-width: 900px) 100vw, 33vw"
+                    className="shot-img"
+                  />
+                  <figcaption>
+                    <h3 className="shot-title">{s.title}</h3>
+                    <p className="shot-caption">{s.caption}</p>
+                  </figcaption>
+                </figure>
               ))}
             </div>
           </div>
