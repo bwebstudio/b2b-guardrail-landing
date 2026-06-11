@@ -230,29 +230,40 @@ const FAQS = [
   },
 ];
 
-// Findings del Protection score del hero: estado realista (Needs attention, 64).
+// Findings del Protection score del hero: previsualización FIEL a la app.
 // Severidades y textos derivados de detectores reales.
 const HERO_FINDINGS: { sev: keyof typeof SEVERITY; text: string }[] = [
   { sev: "critical", text: "Wholesale price list in public catalog" },
   { sev: "warning", text: "WHOLESALE40 code usable by anyone" },
 ];
 
-// Protection score del hero. Anillo SVG: track neutro + arco en el color de la
-// banda (64 -> ámbar "Needs attention"). circ = 2·π·r; offset = circ·(1 − score/100).
-const HERO_SCORE = 64;
+// Score = 100 − Σ penalizaciones, idéntico a la app (services/audit/runner.ts):
+// crítico −25, warning −10. 1 crítico + 1 warning → 65 (no un 64 arbitrario).
+const HERO_PENALTY: Record<keyof typeof SEVERITY, number> = {
+  critical: 25,
+  warning: 10,
+  ok: 0,
+};
+const HERO_SCORE = Math.max(
+  0,
+  100 - HERO_FINDINGS.reduce((acc, f) => acc + HERO_PENALTY[f.sev], 0),
+);
 const RING_R = 80;
 const RING_CIRC = 2 * Math.PI * RING_R;
 const RING_OFFSET = RING_CIRC * (1 - HERO_SCORE / 100);
 
-/** Color del arco por banda de score: mismos cortes que la app. */
-function scoreColor(score: number): string {
-  if (score >= 85) return SEVERITY.ok.dot;
-  if (score >= 60) return SEVERITY.warning.dot;
-  return SEVERITY.critical.dot;
-}
+// Estado de protección por SEVERIDAD, igual que la app (la severidad manda, no la
+// banda del número): cualquier crítico → "At risk" ROJO, aunque el score caiga en
+// banda ámbar. Antes la landing pintaba ámbar "Needs attention" con un crítico
+// presente — un estado que la app real nunca produce.
+const HERO_STATE = HERO_FINDINGS.some((f) => f.sev === "critical")
+  ? { label: "At risk", sev: SEVERITY.critical }
+  : HERO_FINDINGS.some((f) => f.sev === "warning")
+    ? { label: "Needs attention", sev: SEVERITY.warning }
+    : { label: "Protected", sev: SEVERITY.ok };
 
 export function Landing() {
-  const ringColor = scoreColor(HERO_SCORE);
+  const ringColor = HERO_STATE.sev.dot;
 
   return (
     <main className={`lp ${display.variable} ${body.variable}`}>
@@ -807,7 +818,7 @@ export function Landing() {
               <div
                 className="preview-card"
                 role="img"
-                aria-label="B2B Guardrail dashboard showing a protection score of 64 out of 100, Needs attention, with one critical and one warning finding"
+                aria-label="B2B Guardrail dashboard showing a protection score of 65 out of 100, At risk, with one critical and one warning finding"
               >
                 <div className="pc-topstrip">
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -851,7 +862,15 @@ export function Landing() {
                     </div>
                   </div>
                   <div>
-                    <span className="pc-badge">Needs attention</span>
+                    <span
+                      className="pc-badge"
+                      style={{
+                        background: HERO_STATE.sev.bg,
+                        color: HERO_STATE.sev.text,
+                      }}
+                    >
+                      {HERO_STATE.label}
+                    </span>
                     <p className="pc-lastaudit">Last audit 2 hours ago</p>
                   </div>
                 </div>
